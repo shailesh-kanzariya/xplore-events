@@ -1,0 +1,33 @@
+{
+  "name": "xplore_events",
+  "version": "1.0.0",
+  "description": "explore events",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "nodemon src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shailesh-kanzariya/xplore-events.git"
+  },
+  "author": "Shailesh Kanzariya",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/shailesh-kanzariya/xplore-events/issues"
+  },
+  "homepage": "https://github.com/shailesh-kanzariya/xplore-events#readme",
+  "dependencies": {
+    "apollo-server": "^2.9.3",
+    "graphql": "^14.5.6"
+  },
+  "devDependencies": {
+    "eslint": "^6.4.0",
+    "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-node": "^10.0.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "nodemon": "^1.19.2"
+  }
+}
