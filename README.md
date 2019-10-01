@@ -7,5 +7,6 @@ Use GraphQL, Apollo, Express and Node to fetch events data from different data-s
   * Fetch 'weather forecast' for the 'event location/city'
   * Login the user
   * Allow user to save the 'event' if the user is logged in
+  * Allow user to unsave the 'event' if the user is logged in
   * Allow user to get list of 'saved events' if the user is logged in
   * Logout the user
