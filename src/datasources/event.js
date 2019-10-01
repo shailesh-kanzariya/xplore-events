@@ -6,17 +6,16 @@ class EventAPI extends RESTDataSource {
     this.baseURL = 'https://api.yelp.com/v3'
   }
 
-  async getAllEvents ({ eventCity }) {
-    console.log(`eventCity = ${eventCity}`)
-    const response = await this.get('events', undefined, {
-      location: 'NewYork',
+  async getAllEvents (city) {
+    console.log(`city = ${city}`)
+    const response = await this.get('events', { location: city }, {
       headers: {
         Authorization: String('Bearer ').concat(process.env.YELP_API_KEY)
       }
     }) // this.get
     if (Array.isArray(response.events)) {
       const evtList = response.events.map(async (event) => {
-        const evt = await this.eventReducer(event)
+        const evt = this.eventReducer(event)
         console.log(`evt = ${JSON.stringify(evt)}`)
         return evt
       })
@@ -25,14 +24,32 @@ class EventAPI extends RESTDataSource {
     return []
   }
 
-  async getEventById ({ eventId }) {
-    const response = await this.get('events', {
-      id: eventId,
+  async getAllFeaturedEvents (city) {
+    console.log(`city = ${city}`)
+    const response = await this.get('events/featured', { location: city }, {
       headers: {
         Authorization: String('Bearer ').concat(process.env.YELP_API_KEY)
       }
     }) // this.get
-    return this.eventReducer(response[0])
+    if (Array.isArray(response.events)) {
+      const evtList = response.events.map(async (event) => {
+        const evt = this.eventReducer(event)
+        console.log(`evt = ${JSON.stringify(evt)}`)
+        return evt
+      })
+      return evtList
+    }
+    return []
+  }
+
+  async getEventById (eventId) {
+    console.log(`eventId = ${eventId}`)
+    const event = await this.get(`events/${eventId}`, undefined, {
+      headers: {
+        Authorization: String('Bearer ').concat(process.env.YELP_API_KEY)
+      }
+    }) // this.get
+    return this.eventReducer(event)
   }
 
   eventReducer (event) {
