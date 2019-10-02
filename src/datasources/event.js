@@ -1,18 +1,22 @@
 const { RESTDataSource } = require('apollo-datasource-rest')
 require('dotenv').config()
+// constants
+const YELP_API_BASE_URL = 'https://api.yelp.com/v3'
+
 class EventAPI extends RESTDataSource {
   constructor () {
     super()
-    this.baseURL = 'https://api.yelp.com/v3'
+    this.baseURL = YELP_API_BASE_URL
+  }
+
+  // intercept fetch request to set Auth header
+  willSendRequest (request) {
+    request.headers.set('Authorization', String('Bearer ').concat(process.env.YELP_API_KEY))
   }
 
   async getAllEvents (city) {
     console.log(`city = ${city}`)
-    const response = await this.get('events', { location: city }, {
-      headers: {
-        Authorization: String('Bearer ').concat(process.env.YELP_API_KEY)
-      }
-    }) // this.get
+    const response = await this.get('events', { location: city }) // this.get
     if (Array.isArray(response.events)) {
       const evtList = response.events.map(async (event) => {
         const evt = this.eventReducer(event)
@@ -26,11 +30,7 @@ class EventAPI extends RESTDataSource {
 
   async getAllFeaturedEvents (city) {
     console.log(`city = ${city}`)
-    const response = await this.get('events/featured', { location: city }, {
-      headers: {
-        Authorization: String('Bearer ').concat(process.env.YELP_API_KEY)
-      }
-    }) // this.get
+    const response = await this.get('events/featured', { location: city }) // this.get
     if (Array.isArray(response.events)) {
       const evtList = response.events.map(async (event) => {
         const evt = this.eventReducer(event)
@@ -44,11 +44,7 @@ class EventAPI extends RESTDataSource {
 
   async getEventById (eventId) {
     console.log(`eventId = ${eventId}`)
-    const event = await this.get(`events/${eventId}`, undefined, {
-      headers: {
-        Authorization: String('Bearer ').concat(process.env.YELP_API_KEY)
-      }
-    }) // this.get
+    const event = await this.get(`events/${eventId}`) // this.get
     return this.eventReducer(event)
   }
 

@@ -1,12 +1,12 @@
 module.exports = {
   Query: {
-    events: (_, { city }, { dataSources }) =>
+    events: (_source, { city }, { dataSources }) =>
       dataSources.eventAPI.getAllEvents(city),
-    featuredEvents: (_, { city }, { dataSources }) =>
+    featuredEvents: (_source, city, { dataSources }) =>
       dataSources.eventAPI.getAllFeaturedEvents(city),
-    event: (_, { id }, { dataSources }) =>
+    event: (_source, { id }, { dataSources }) =>
       dataSources.eventAPI.getEventById(id),
-    me: (_, __, { dataSources }) =>
+    me: (_source, __, { dataSources }) =>
       dataSources.userAPI.findOrCreateUser()
   }
 } // exports
