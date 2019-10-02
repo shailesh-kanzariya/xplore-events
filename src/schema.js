@@ -28,8 +28,7 @@ const typeDefs = gql`
   }
   # define User
   type User {
-    id: ID!
-    email: String!
+    email: ID!
     savedEvents: [Event]!
   }
   # define mutation response interface
@@ -45,7 +44,7 @@ const typeDefs = gql`
   type Mutation {
     saveEvent(eventId: String!): SaveEventResponse!
     unsaveEvent(eventId: String!): UnsaveEventResponse!
-    login(email: String!): LoginResponse!
+    login(email: String!): String! # login token
   }
   # define all mutation responses
   type SaveEventResponse implements MutationResponse {

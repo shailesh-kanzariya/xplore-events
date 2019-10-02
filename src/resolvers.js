@@ -8,5 +8,27 @@ module.exports = {
       dataSources.eventAPI.getEventById(id),
     me: (_source, __, { dataSources }) =>
       dataSources.userAPI.findOrCreateUser()
+  },
+  Mutation: {
+    login: async (_source, { email }, { dataSources }) => {
+      console.log(`login: email = ${email}`)
+      const userItem = await dataSources.userAPI.findOrCreateUser(email)
+      if (userItem) {
+        return Buffer.from(email).toString('base64')
+      }
+    }
+  },
+  User: {
+    savedEvents: (_source, __, { dataSources }) => {
+      // #TODO: get saved eventIds for the user
+      dataSources.userAPI.getSavedEventIdsByUser()
+    }
   }
 } // exports
+/*
+type User {
+  id: ID!
+  email: String!
+  savedEvents: [Event]!
+}
+*/
