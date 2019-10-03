@@ -42,8 +42,8 @@ const typeDefs = gql`
   }
   # define supported mutations
   type Mutation {
-    saveEvent(eventId: String!): SaveEventResponse!
-    unsaveEvent(eventId: String!): UnsaveEventResponse!
+    saveEvent(eventId: String!): String! # eventId
+    unsaveEvent(eventId: String!): Event!
     login(email: String!): String! # login token
   }
   # define all mutation responses

@@ -14,8 +14,15 @@ module.exports = {
       console.log(`login: email = ${email}`)
       const userItem = await dataSources.userAPI.findOrCreateUser(email)
       if (userItem) {
+        // return LoginResponse
         return Buffer.from(email).toString('base64')
       }
+    },
+    saveEvent: async (_source, { eventId }, { dataSources }) => {
+      console.log(`saveEvent: eventId = ${eventId}`)
+      const savedEventId = await dataSources.userAPI.saveEventForUser(eventId)
+      console.log(`saveEvent: savedEventId = ${savedEventId}`)
+      return savedEventId
     }
   },
   User: {

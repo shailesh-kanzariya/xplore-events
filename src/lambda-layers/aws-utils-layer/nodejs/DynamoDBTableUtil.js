@@ -148,7 +148,35 @@ class DynamoDBTableUtil extends SimpleDynamoDBUtil {
       winston.error(`${funcName}error = ${error}`)
       throw (error)
     }
-  } // getItem
+  } // findOrCreateItem
+
+  /**
+   * updates an item by appending the list to the existing list. If there is no existing list then
+   *  it simply creates emptly list first and appends the 'newList' for specified 'listAttributeName' of the item
+   * If the specified item does not exist then it adds the new item to the table
+   * @param {any} itemPkValue pk value of the item to update
+   * @param {String} listAttributeName attribute name for which to append the list
+   * @param {Array} listToAppend list to append
+   */
+  async updateItemByAppendingList (itemPkValue, listAttributeName, listToAppend) {
+    const funcName = 'updateItemByAppendingList: '
+    try {
+      // validate input params
+      if (itemPkValue === null || itemPkValue === undefined) {
+        winston.error(`${funcName}invalid value: itemPkValue = ${itemPkValue}`)
+        throw (new Error(`${funcName}invalid value: itemPkValue = ${itemPkValue}`))
+      }
+      debug(`${funcName}itemPkValue = ${itemPkValue}`)
+      await ValidationUtil.isValidString([listAttributeName, this.tableName])
+      await ValidationUtil.isValidObject([listToAppend])
+      const updatedItem = await super.updateItemInTableByAppendingList(this.tableName, itemPkValue, listAttributeName, listToAppend)
+      debug(`${funcName}updatedItem = ${JSON.stringify(updatedItem)}`)
+      return updatedItem
+    } catch (error) {
+      winston.error(`${funcName}error = ${error}`)
+      throw (error)
+    }
+  } // updateItemByAppendingList
 } // class
 module.exports = {
   DynamoDBTableUtil

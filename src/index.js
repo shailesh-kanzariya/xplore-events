@@ -27,10 +27,13 @@ const server = new ApolloServer({
   },
   typeDefs,
   resolvers,
-  dataSources: () => ({
-    eventAPI: new EventAPI(),
-    userAPI: new UserAPI()
-  })
+  dataSources: () => {
+    console.log('initializing datasources...')
+    return {
+      eventAPI: new EventAPI(),
+      userAPI: new UserAPI()
+    }
+  }
 }) // server
 
 server.listen().then(({ url }) => {

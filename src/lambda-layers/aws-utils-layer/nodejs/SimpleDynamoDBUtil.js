@@ -191,6 +191,9 @@ class SimpleDynamoDBUtil extends Object {
       debug(`${funcName}params = ${JSON.stringify(params)}`)
       const data = await this.docClient.put(params).promise()
       debug(`${funcName}data = ${JSON.stringify(data)}`)
+      if (data.Attributes) {
+        return data.Attributes // old/overwritten item json
+      }
       return data
     } catch (error) {
       winston.error(`${funcName}error = ${error}`)
@@ -240,41 +243,58 @@ class SimpleDynamoDBUtil extends Object {
       throw (error)
     }
   } // createNewItem
+
   /**
-   * simple query to the table
-   * @param {string} tableName
-   * @param {string} keyConditionExpression
-   * @param {JSON} expressionAttributeNames
-   * @param {JSON} expressionAttributeValues
-   * @param {string} filterExpression
-   * @param {string} projectionExpression
+   * updates an item by appending 'newList' to the existing list. If there is no existing list then
+   *  it first creates emptly list and then appends the 'newList' to specified 'listAttributeName' for the item.
+   * If the specified item does not exist then it adds the new item to the table
+   * @param {String} tableName table in which the item to update
+   * @param {any} itemPkValue pk value of the item to update
+   * @param {String} listAttributeName attribute name for which to append the list
+   * @param {Array} listToAppend list to append
    */
-  /*
-  async queryTableSimple (tableName, keyConditionExpression, expressionAttributeNames, expressionAttributeValues, filterExpression = null, projectionExpression = null) {
-    const funcName = 'queryTableSimple: '
+  async updateItemInTableByAppendingList (tableName, itemPkValue, listAttributeName, listToAppend) {
+    const funcName = 'updateItemByAppendingList: '
     try {
       // validate input params
-      await ValidationUtil.isValidString([tableName, keyConditionExpression])
-      await ValidationUtil.isValidObject([this.docClient, expressionAttributeNames, expressionAttributeValues])
+      await ValidationUtil.isValidString([tableName, listAttributeName])
+      await ValidationUtil.isValidObject([listToAppend])
+      debug(`${funcName}itemPkValue = ${itemPkValue}`)
+      if (itemPkValue === null || itemPkValue === undefined) {
+        winston.error(`${funcName}invalid param: itemPkValue = ${itemPkValue}`)
+        throw (new Error(`${funcName}invalid param: itemPkValue = ${itemPkValue}`))
+      }
+      // get pk attribute name from table
+      const pkAttributeName = await this.getHashKeyAttributeNameForTable(tableName)
+      debug(`${funcName}pkAttributeName = ${pkAttributeName}`)
+      if (!pkAttributeName) {
+        winston.error(`${funcName}failed to get attribute name of partition key, pkAttributeName = ${pkAttributeName}`)
+        throw (new Error(`${funcName}failed to get attribute name of partition key, pkAttributeName = ${pkAttributeName}`))
+      }
       // prepare params
       const params = {
         TableName: tableName,
-        KeyConditionExpression: keyConditionExpression,
-        ExpressionAttributeNames: expressionAttributeNames,
-        ExpressionAttributeValues: expressionAttributeValues,
-        FilterExpression: filterExpression,
-        ProjectionExpression: projectionExpression
+        Key: {},
+        UpdateExpression: 'SET #a1 = list_append(if_not_exists(#a1, :v2), :v1)',
+        ExpressionAttributeNames: {
+          '#a1': listAttributeName
+        },
+        ExpressionAttributeValues: {
+          ':v1': listToAppend,
+          ':v2': []
+        },
+        ReturnValues: 'ALL_NEW'
       }
+      params.Key[pkAttributeName] = itemPkValue // set pkAttributeName and its value
       debug(`${funcName}params = ${JSON.stringify(params)}`)
-      const data = await this.docClient.query(params).promise()
+      const data = await this.docClient.update(params).promise()
       debug(`${funcName}data = ${JSON.stringify(data)}`)
-      return data
+      return data.Attributes // updated item json
     } catch (error) {
       winston.error(`${funcName}error = ${error}`)
       throw (error)
     }
-  } // queryTableSimple
-  */
+  } // updateItemInTableByAppendingList
 } // class
 
 module.exports = {
