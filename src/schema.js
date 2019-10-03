@@ -43,7 +43,7 @@ const typeDefs = gql`
   # define supported mutations
   type Mutation {
     saveEvent(eventId: String!): String! # eventId
-    unsaveEvent(eventId: String!): Event!
+    unsaveEvent(eventId: String!): String! # eventId
     login(email: String!): String! # login token
   }
   # define all mutation responses

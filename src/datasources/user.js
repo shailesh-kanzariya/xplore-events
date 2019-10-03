@@ -4,6 +4,7 @@ winston.add(new winston.transports.Console()) // add Console as transport target
 const { DataSource } = require('apollo-datasource')
 const isEmail = require('isemail')
 const utils = require('./../utils')
+const { ValidationUtil } = require('./../lambda-layers/common-layer/nodejs/ValidationUtil')
 const { DynamoDBTableUtil } = require('./../lambda-layers/aws-utils-layer/nodejs/DynamoDBTableUtil')
 // constants
 const USERS_DDB_TABLE_NAME = 'users'
@@ -70,12 +71,20 @@ class UserAPI extends DataSource {
     try {
       console.log(`${funcName}eventId = ${eventId}`)
       if (!eventId) {
+        winston.error(`${funcName} invalid event id = ${eventId}`)
         return null
       }
       const userEmail = this.context.user.email
       console.log(`${funcName}userEmail = ${userEmail}`)
       if (!userEmail) {
+        winston.error(`${funcName} invalid user email = ${userEmail}`)
         return null
+      }
+      const eventIdList = await this.getEventIdListForUser(userEmail)
+      // check if eventId already exist
+      if (eventIdList && eventIdList.includes(eventId)) {
+        winston.error(`${funcName} event already exist in user's saved event list`)
+        return 'This event is already saved and exist in your saved event list'
       }
       // save event for the user in DDB
       const updatedEventIdList = await this.usersTableUtil.updateItemByAppendingList(userEmail, this.eventIdListAttributeName, [eventId])
@@ -87,17 +96,63 @@ class UserAPI extends DataSource {
     }
   } // saveEventForUser
 
-  async unSaveEventForUser () {
+  async unSaveEventForUser (eventId) {
     const funcName = 'unSaveEventForUser: '
     try {
+      console.log(`${funcName}eventId = ${eventId}`)
+      if (!eventId) {
+        winston.error(`${funcName} invalid event id = ${eventId}`)
+        return null
+      }
       const userEmail = this.context.user.email
       console.log(`${funcName}userEmail = ${userEmail}`)
-      if (!userEmail) return
+      if (!userEmail) {
+        winston.error(`${funcName} invalid user email = ${userEmail}`)
+        return null
+      }
+      // get eventIDList for the user
+      const eventIdList = await this.getEventIdListForUser(userEmail)
+      if (!(eventIdList && Array.isArray(eventIdList))) {
+        winston.error(`${funcName} invalid event id list for attribute: ${this.eventIdListAttributeName}`)
+        throw (new Error(`${funcName} invalid event id list for attribute: ${this.eventIdListAttributeName}`))
+      }
+      // check if event exist in the list
+      if (!eventIdList.includes(eventId)) {
+        // no eventId exist in the eventIdList, so no need to go for remove process
+        return 'Error: given event do not exist in your saved event list'
+      }
+      // delete eventId
+      const updatedItem = await this.usersTableUtil.updateItemByRemovingList(userEmail, this.eventIdListAttributeName, [eventId])
+      console.log(`${funcName}updatedItem = ${JSON.stringify(updatedItem)}`)
+      return eventId
     } catch (error) {
       winston.error(`${funcName}error = ${error}`)
       throw (error)
     }
   } // unSaveEventForUser
+
+  async getEventIdListForUser (userEmail) {
+    const funcName = 'getEventIdListForUser: '
+    try {
+      await ValidationUtil.isValidString([userEmail])
+      // get the item
+      const userItem = await this.usersTableUtil.getItem(userEmail)
+      console.log(`userItem = ${JSON.stringify(userItem)}`)
+      if (!userItem) {
+        winston.error(`${funcName} invalid user item = ${userItem}`)
+        throw (new Error(`${funcName} invalid user item`))
+      }
+      const eventIdList = userItem[this.eventIdListAttributeName]
+      console.log(`eventIdList = ${JSON.stringify(eventIdList)}`)
+      if (eventIdList && Array.isArray(eventIdList)) {
+        return eventIdList
+      }
+      return null
+    } catch (error) {
+      winston.error(`${funcName}error = ${error}`)
+      throw (error)
+    }
+  } // getEventIdListForUser
 } // class
 module.exports = {
   UserAPI

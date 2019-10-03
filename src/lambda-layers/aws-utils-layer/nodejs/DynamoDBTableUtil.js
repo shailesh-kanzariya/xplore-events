@@ -177,6 +177,38 @@ class DynamoDBTableUtil extends SimpleDynamoDBUtil {
       throw (error)
     }
   } // updateItemByAppendingList
+
+  /**
+   * updates an item by removing elements-list from the existing list.
+   * Specified item and item-attribute must exist in the table
+   * @param {any} itemPkValue pk value of the item to update
+   * @param {String} listAttributeName attribute name for which to remove the list
+   * @param {Array} listToRemove list to remove
+   */
+  async updateItemByRemovingList (itemPkValue, listAttributeName, listToRemove) {
+    const funcName = 'updateItemByRemovingList: '
+    try {
+      // validate input params
+      await ValidationUtil.isValidObject([listToRemove])
+      if (!(listToRemove && Array.isArray(listToRemove))) { // must be an array
+        winston.error(`${funcName}invalid param: listToRemove = ${listToRemove}`)
+        throw (new Error(`${funcName}invalid param: listToRemove = ${listToRemove}`))
+      }
+      debug(`${funcName}listToRemove = ${JSON.stringify(listToRemove)}`)
+      if (itemPkValue === null || itemPkValue === undefined) {
+        winston.error(`${funcName}invalid value: itemPkValue = ${itemPkValue}`)
+        throw (new Error(`${funcName}invalid value: itemPkValue = ${itemPkValue}`))
+      }
+      debug(`${funcName}itemPkValue = ${itemPkValue}`)
+      await ValidationUtil.isValidString([listAttributeName, this.tableName])
+      const updatedItem = await super.updateItemInTableByRemovingList(this.tableName, itemPkValue, listAttributeName, listToRemove)
+      debug(`${funcName}updatedItem = ${JSON.stringify(updatedItem)}`)
+      return updatedItem
+    } catch (error) {
+      winston.error(`${funcName}error = ${error}`)
+      throw (error)
+    }
+  } // updateItemByRemovingList
 } // class
 module.exports = {
   DynamoDBTableUtil

@@ -295,6 +295,83 @@ class SimpleDynamoDBUtil extends Object {
       throw (error)
     }
   } // updateItemInTableByAppendingList
+
+  /**
+   * updates an item by removing elements-list from the existing list.
+   * Specified item and item-attribute must exist in the table
+   * @param {String} tableName table in which the item to update
+   * @param {any} itemPkValue pk value of the item to update
+   * @param {String} listAttributeName attribute name for which to remove the list
+   * @param {Array} listToRemove list of elements to remove
+   */
+  async updateItemInTableByRemovingList (tableName, itemPkValue, listAttributeName, listToRemove) {
+    const funcName = 'updateItemInTableByRemovingList: '
+    try {
+      // validate input params
+      await ValidationUtil.isValidString([tableName, listAttributeName])
+      await ValidationUtil.isValidObject([listToRemove])
+      if (!(listToRemove && Array.isArray(listToRemove))) { // must be an array
+        winston.error(`${funcName}invalid param: listToRemove = ${listToRemove}`)
+        throw (new Error(`${funcName}invalid param: listToRemove = ${listToRemove}`))
+      }
+      debug(`${funcName}itemPkValue = ${itemPkValue}`)
+      if (itemPkValue === null || itemPkValue === undefined) {
+        winston.error(`${funcName}invalid param: itemPkValue = ${itemPkValue}`)
+        throw (new Error(`${funcName}invalid param: itemPkValue = ${itemPkValue}`))
+      }
+      // get pk attribute name from table
+      const pkAttributeName = await this.getHashKeyAttributeNameForTable(tableName)
+      debug(`${funcName}pkAttributeName = ${pkAttributeName}`)
+      if (!pkAttributeName) {
+        winston.error(`${funcName}failed to get attribute name of partition key, pkAttributeName = ${pkAttributeName}`)
+        throw (new Error(`${funcName}failed to get attribute name of partition key, pkAttributeName = ${pkAttributeName}`))
+      }
+      // get an item
+      const ddbItem = await this.getItemFromTable(tableName, itemPkValue)
+      if (!ddbItem) {
+        winston.error(`${funcName}item does not exist, item = ${ddbItem}`)
+        throw (new Error(`${funcName}item does not exist`))
+      }
+      debug(`${funcName}ddbItem = ${JSON.stringify(ddbItem)}`)
+      // get list from the list-attribute
+      const itemList = ddbItem[listAttributeName]
+      if (!(itemList && Array.isArray(itemList))) {
+        winston.error(`${funcName}item has no list for attribute: ${listAttributeName}`)
+        throw (new Error(`${funcName}item has no list for attribute: ${listAttributeName}`))
+      }
+      debug(`${funcName}itemList = ${JSON.stringify(itemList)}`)
+      // remove item from itemList
+      for (const itemToRemove of listToRemove) {
+        debug(`${funcName}itemToRemove = ${itemToRemove}`)
+        if (itemList.includes(itemToRemove)) {
+          const removedItem = itemList.splice(itemList.indexOf(itemToRemove), 1)
+          debug(`${funcName}removedItem = ${JSON.stringify(removedItem)}`)
+        }
+      } // for
+      debug(`${funcName}itemList after removing items = ${JSON.stringify(itemList)}`)
+      // prepare params
+      const params = {
+        TableName: tableName,
+        Key: {},
+        UpdateExpression: 'SET #a1 = :v1',
+        ExpressionAttributeNames: {
+          '#a1': listAttributeName
+        },
+        ExpressionAttributeValues: {
+          ':v1': itemList
+        },
+        ReturnValues: 'ALL_NEW'
+      }
+      params.Key[pkAttributeName] = itemPkValue // set pkAttributeName and its value
+      debug(`${funcName}params = ${JSON.stringify(params)}`)
+      const data = await this.docClient.update(params).promise()
+      debug(`${funcName}data = ${JSON.stringify(data)}`)
+      return data.Attributes // updated item json
+    } catch (error) {
+      winston.error(`${funcName}error = ${error}`)
+      throw (error)
+    }
+  } // updateItemInTableByRemovingList
 } // class
 
 module.exports = {

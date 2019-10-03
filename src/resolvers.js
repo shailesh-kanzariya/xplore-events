@@ -22,7 +22,19 @@ module.exports = {
       console.log(`saveEvent: eventId = ${eventId}`)
       const savedEventId = await dataSources.userAPI.saveEventForUser(eventId)
       console.log(`saveEvent: savedEventId = ${savedEventId}`)
-      return savedEventId
+      if (savedEventId) {
+        return savedEventId
+      }
+      return 'Error: error occured when saving the event'
+    },
+    unsaveEvent: async (_source, { eventId }, { dataSources }) => {
+      console.log(`unsaveEvent: eventId = ${eventId}`)
+      const savedEventId = await dataSources.userAPI.unSaveEventForUser(eventId)
+      console.log(`unsaveEvent: savedEventId = ${savedEventId}`)
+      if (savedEventId) {
+        return savedEventId
+      }
+      return 'Error: error occured when unsaving the event'
     }
   },
   User: {
