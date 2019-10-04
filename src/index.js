@@ -5,6 +5,8 @@ const { EventAPI } = require('./datasources/event')
 const { UserAPI } = require('./datasources/user')
 const resolvers = require('./resolvers')
 const isEmail = require('isemail')
+// constants
+const TEST_USER_EMAIL = 'john.dpe@xploreevents.com'
 
 // create Apollo server instance and configure datasources
 const server = new ApolloServer({
@@ -15,6 +17,10 @@ const server = new ApolloServer({
     if (!isEmail.validate(email)) {
       console.log('context func: invalid email, so returing user = null')
       return { user: null }
+    }
+    if (email !== TEST_USER_EMAIL) {
+      console.log(`context: ${email} invalid user, only test user allowed.....`)
+      return null
     }
     const userAPI = new UserAPI()
     // init the userAPI
