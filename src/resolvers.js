@@ -1,3 +1,4 @@
+// resolver (parent, args, context, info)
 module.exports = {
   Query: {
     events: (_source, { city }, { dataSources }) =>
@@ -38,15 +39,25 @@ module.exports = {
     }
   },
   User: {
-    savedEvents: (_source, __, { dataSources }) => {
-      // #TODO: get saved eventIds for the user
-      dataSources.userAPI.getSavedEventIdsByUser()
-    }
+    savedEvents: async (parent, args, { dataSources }) => {
+      console.log('User: savedEvents called.....')
+      console.log(`User: parent = ${JSON.stringify(parent)}`)
+      const eventIdList = parent.SavedEventId
+      console.log(`User: eventIdList = ${JSON.stringify(eventIdList)}`)
+      // get eventDetails for each eventId
+      const eventsList = []
+      for (const eventId of eventIdList) {
+        console.log(`User: eventId = ${eventId}`)
+        const evt = await dataSources.eventAPI.getEventById(eventId)
+        eventsList.push(evt)
+      } // for
+      console.log(`User: eventsList = ${JSON.stringify(eventsList)}`)
+      return eventsList
+    } // savedEvents
   }
 } // exports
 /*
 type User {
-  id: ID!
   email: String!
   savedEvents: [Event]!
 }

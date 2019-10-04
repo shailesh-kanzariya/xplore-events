@@ -15,7 +15,7 @@ class UserAPI extends DataSource {
     try {
       const ddbConfigOptions = await utils.getDynamoDBConfigOptions()
       this.usersTableUtil = new DynamoDBTableUtil(USERS_DDB_TABLE_NAME, ddbConfigOptions)
-      this.eventIdListAttributeName = 'eventIdList'
+      this.eventIdListAttributeName = 'SavedEventId'
     } catch (error) {
       winston.error(`${funcName}error = ${error}`)
       throw (error)
@@ -32,16 +32,13 @@ class UserAPI extends DataSource {
   async findOrCreateUser (emailArg) {
     const funcName = 'findOrCreateUser: '
     try {
-      if (this.context && this.context.user) {
-        console.log(`${funcName}this.context.user = ${JSON.stringify(this.context.user)}`)
-      }
       console.log(`${funcName}emailArg = ${emailArg}`)
-      const email = this.context && this.context.user ? this.context.user.email : emailArg
-      console.log(`${funcName}email = ${email}`)
-      if (!email || !isEmail.validate(email)) {
+      const userEmail = this.context && this.context.user && this.context.user.email ? this.context.user.email : emailArg
+      console.log(`${funcName}userEmail = ${userEmail}`)
+      if (!userEmail || !isEmail.validate(userEmail)) {
         return null
       }
-      const itemJson = { email: emailArg }
+      const itemJson = { email: userEmail }
       console.log(`${funcName}itemJson = ${JSON.stringify(itemJson)}`)
       const userItem = await this.usersTableUtil.findOrCreateItem(itemJson)
       console.log(`${funcName}userItem = ${JSON.stringify(userItem)}`)
@@ -74,13 +71,17 @@ class UserAPI extends DataSource {
         winston.error(`${funcName} invalid event id = ${eventId}`)
         return null
       }
+      if (!(this.context && this.context.user && this.context.user.email)) {
+        console.log(`${funcName}invalid this.context: ${this.context}`)
+        return null
+      }
       const userEmail = this.context.user.email
       console.log(`${funcName}userEmail = ${userEmail}`)
       if (!userEmail) {
         winston.error(`${funcName} invalid user email = ${userEmail}`)
         return null
       }
-      const eventIdList = await this.getEventIdListForUser(userEmail)
+      const eventIdList = await this.getSavedEventIdListForUser(userEmail)
       // check if eventId already exist
       if (eventIdList && eventIdList.includes(eventId)) {
         winston.error(`${funcName} event already exist in user's saved event list`)
@@ -104,6 +105,10 @@ class UserAPI extends DataSource {
         winston.error(`${funcName} invalid event id = ${eventId}`)
         return null
       }
+      if (!(this.context && this.context.user && this.context.user.email)) {
+        console.log(`${funcName}invalid this.context: ${this.context}`)
+        return null
+      }
       const userEmail = this.context.user.email
       console.log(`${funcName}userEmail = ${userEmail}`)
       if (!userEmail) {
@@ -111,7 +116,7 @@ class UserAPI extends DataSource {
         return null
       }
       // get eventIDList for the user
-      const eventIdList = await this.getEventIdListForUser(userEmail)
+      const eventIdList = await this.getSavedEventIdListForUser(userEmail)
       if (!(eventIdList && Array.isArray(eventIdList))) {
         winston.error(`${funcName} invalid event id list for attribute: ${this.eventIdListAttributeName}`)
         throw (new Error(`${funcName} invalid event id list for attribute: ${this.eventIdListAttributeName}`))
@@ -131,8 +136,8 @@ class UserAPI extends DataSource {
     }
   } // unSaveEventForUser
 
-  async getEventIdListForUser (userEmail) {
-    const funcName = 'getEventIdListForUser: '
+  async getSavedEventIdListForUser (userEmail) {
+    const funcName = 'getSavedEventIdListForUser: '
     try {
       await ValidationUtil.isValidString([userEmail])
       // get the item
@@ -152,7 +157,28 @@ class UserAPI extends DataSource {
       winston.error(`${funcName}error = ${error}`)
       throw (error)
     }
-  } // getEventIdListForUser
+  } // getSavedEventIdListForUser
+
+  async getSavedEventIdsForUser () {
+    const funcName = 'getSavedEventIdsForUser: '
+    try {
+      if (!(this.context && this.context.user && this.context.user.email)) {
+        console.log(`${funcName}invalid this.context: ${this.context}`)
+        return null
+      }
+      const userEmail = this.context.user.email
+      console.log(`${funcName}userEmail = ${userEmail}`)
+      const eventIdList = await this.getSavedEventIdListForUser(userEmail)
+      if (!(eventIdList && Array.isArray(eventIdList))) {
+        winston.error(`${funcName}invalid event ids: ${JSON.stringify(eventIdList)}`)
+        return [] // no event id list exist
+      }
+      return eventIdList
+    } catch (error) {
+      winston.error(`${funcName}error = ${error}`)
+      throw (error)
+    }
+  }
 } // class
 module.exports = {
   UserAPI
