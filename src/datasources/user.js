@@ -4,8 +4,8 @@ winston.add(new winston.transports.Console()) // add Console as transport target
 const { DataSource } = require('apollo-datasource')
 const isEmail = require('isemail')
 const utils = require('./../utils')
-const { ValidationUtil } = require('./../lambda-layers/common-layer/nodejs/ValidationUtil')
-const { DynamoDBTableUtil } = require('./../lambda-layers/aws-utils-layer/nodejs/DynamoDBTableUtil')
+const { ValidationUtil } = require('./../aws-utils/common-utils/ValidationUtil')
+const { DynamoDBTableUtil } = require('./../aws-utils/DynamoDBTableUtil')
 // constants
 const USERS_DDB_TABLE_NAME = 'users'
 

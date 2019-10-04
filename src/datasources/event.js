@@ -1,5 +1,5 @@
-const { RESTDataSource } = require('apollo-datasource-rest')
 require('dotenv').config()
+const { RESTDataSource } = require('apollo-datasource-rest')
 // constants
 const YELP_API_BASE_URL = 'https://api.yelp.com/v3'
 

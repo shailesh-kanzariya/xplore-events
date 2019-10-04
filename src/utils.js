@@ -1,8 +1,8 @@
+// load env vars
+require('dotenv').config()
 const winston = require('winston')
 winston.add(new winston.transports.Console()) // add Console as transport target
 // const debug = require('debug')('utils')
-// load env vars
-require('dotenv').config()
 
 async function getDynamoDBConfigOptions () {
   const funcName = 'getDynamoDBConfigOptions: '

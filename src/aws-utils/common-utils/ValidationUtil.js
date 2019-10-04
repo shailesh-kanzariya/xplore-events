@@ -1,7 +1,6 @@
 const winston = require('winston')
 winston.add(new winston.transports.Console()) // add console as transport target
 const debug = require('debug')('ValidationUtil')
-require('dotenv').config()
 
 /**
  * ValidationUtil Class: Performs various 'data validations' i.e. is valid string type?, is valid Integer?, is valid email? etc.
