@@ -40,9 +40,8 @@ module.exports = {
   },
   User: {
     savedEvents: async (parent, args, { dataSources }) => {
-      console.log('User: savedEvents called.....')
       console.log(`User: parent = ${JSON.stringify(parent)}`)
-      const eventIdList = parent.SavedEventId
+      const eventIdList = parent.savedEventIds
       console.log(`User: eventIdList = ${JSON.stringify(eventIdList)}`)
       // get eventDetails for each eventId
       const eventsList = []

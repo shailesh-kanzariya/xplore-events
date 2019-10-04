@@ -15,7 +15,7 @@ class UserAPI extends DataSource {
     try {
       const ddbConfigOptions = await utils.getDynamoDBConfigOptions()
       this.usersTableUtil = new DynamoDBTableUtil(USERS_DDB_TABLE_NAME, ddbConfigOptions)
-      this.eventIdListAttributeName = 'SavedEventId'
+      this.eventIdListAttributeName = 'savedEventIds'
     } catch (error) {
       winston.error(`${funcName}error = ${error}`)
       throw (error)
@@ -38,11 +38,22 @@ class UserAPI extends DataSource {
       if (!userEmail || !isEmail.validate(userEmail)) {
         return null
       }
+      // first check if the user attached to contex has 'savedEventIds' list then do not fetch again
+      if (this.context && this.context.user) {
+        const userItem = this.context.user
+        console.log(`${funcName}userItem = ${JSON.stringify(userItem)}`)
+        if (userItem && userItem[this.eventIdListAttributeName] && Array.isArray(userItem[this.eventIdListAttributeName])) {
+          console.log(`${funcName}we already have 'savedEventIds' list attached to context, so not fetching from db...`)
+          // we already have 'savedEventIds' list
+          return userItem
+        }
+      }
+      // we don;t have userItem so fetch it from DB
       const itemJson = { email: userEmail }
       console.log(`${funcName}itemJson = ${JSON.stringify(itemJson)}`)
-      const userItem = await this.usersTableUtil.findOrCreateItem(itemJson)
-      console.log(`${funcName}userItem = ${JSON.stringify(userItem)}`)
-      return userItem
+      const fetchedItem = await this.usersTableUtil.findOrCreateItem(itemJson)
+      console.log(`${funcName}fetchedItem = ${JSON.stringify(fetchedItem)}`)
+      return fetchedItem
     } catch (error) {
       winston.error(`${funcName}error = ${error}`)
       throw (error)
