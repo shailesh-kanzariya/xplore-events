@@ -20,7 +20,7 @@
   "dependencies": {
     "apollo-datasource": "^0.6.3",
     "apollo-datasource-rest": "^0.6.4",
-    "apollo-server": "^2.9.3",
+    "apollo-server": "^2.25.4",
     "aws-sdk": "^2.542.0",
     "debug": "^4.1.1",
     "dotenv": "^8.1.0",
